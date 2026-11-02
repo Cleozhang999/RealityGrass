@@ -34,6 +34,11 @@ public struct GrassPalette: Sendable, Equatable {
         [0.36, 0.58, 0.17], [0.27, 0.50, 0.14], [0.42, 0.62, 0.22], [0.22, 0.42, 0.13], [0.46, 0.60, 0.20],
     ])
 
+    /// Desaturated sage and olive greens, for a calmer, more natural look such as marshland.
+    public static let muted = GrassPalette(blades: [
+        [0.42, 0.49, 0.32], [0.35, 0.42, 0.28], [0.47, 0.51, 0.36], [0.31, 0.37, 0.25], [0.44, 0.47, 0.33],
+    ], dryShare: 0.14, dry: [0.60, 0.56, 0.42], rootBrightness: 0.32, tipBrightness: 1.15)
+
     /// Late-summer grass, more olive with plenty of dry blades.
     public static let lateSummer = GrassPalette(blades: [
         [0.45, 0.52, 0.20], [0.38, 0.46, 0.17], [0.52, 0.55, 0.25],
