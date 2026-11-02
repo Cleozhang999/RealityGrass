@@ -30,7 +30,7 @@ struct GrassParams {
     float windStrength;
     /// How fast the wind oscillates, in radians per second.
     float windFrequency;
-    /// Distance in meters between gust fronts rolling across the field.
+    /// Typical size in meters of the gust clumps moving across the field.
     float windGustLength;
     /// Horizontal (XZ) direction the wind blows towards. Normalized.
     simd_float3 windDirection;

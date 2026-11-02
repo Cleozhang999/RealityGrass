@@ -107,9 +107,10 @@ kernel void generateGrassBlades(device GrassVertex *restVertices [[buffer(0)]],
 
 /// Sways every blade in the wind by rotating it around its root.
 ///
-/// The motion has two parts: gusts that roll across the field as a wave along the wind
-/// direction, pushing blades downwind, and a small per-blade flutter. Higher vertices bend
-/// more (quadratically).
+/// Wind comes from a noise field that drifts downwind and slowly churns, so gusts arrive as
+/// separate clumps: one patch of grass is pressed down while the patch next to it is still,
+/// and the clumps travel across the field. Each blade also flutters a little on its own.
+/// Higher vertices bend more (quadratically).
 kernel void updateGrassVertices(device const GrassVertex *restVertices [[buffer(0)]],
                                 device GrassVertex *vertices [[buffer(1)]],
                                 constant GrassParams &params [[buffer(2)]],
@@ -123,12 +124,25 @@ kernel void updateGrassVertices(device const GrassVertex *restVertices [[buffer(
     float3 root = (restVertices[firstVertex].position + restVertices[firstVertex + 1].position) * 0.5;
     float along = rest.uv.y;
 
-    float3 wind = params.windDirection;
-    float gustPhase = dot(root.xz, wind.xz) * (2.0 * M_PI_F / params.windGustLength) - params.time * params.windFrequency;
-    float gust = 0.5 + 0.5 * sin(gustPhase + 0.6 * sin(gustPhase * 0.37));
-    float flutter = sin(params.time * params.windFrequency * 3.1 + hash(blade, 789.123) * 2.0 * M_PI_F);
-    float sway = params.windStrength * along * along * (0.25 + 0.75 * gust + 0.15 * flutter);
+    // Work in the wind's frame: x downwind, y across the wind.
+    float2 downwind = params.windDirection.xz;
+    float2 across = float2(-downwind.y, downwind.x);
+    float2 p = float2(dot(root.xz, downwind), dot(root.xz, across)) / params.windGustLength;
 
+    // Gust clumps travel downwind at a speed tied to the wind frequency, and the field drifts
+    // sideways a little so their shapes keep changing instead of sliding past rigidly.
+    float travel = params.time * params.windFrequency * 0.5;
+    float2 q = p - float2(travel, -0.35 * travel);
+    float field = valueNoise(q) * 0.65 + valueNoise(q * 2.3 + float2(17.1, 4.7) + float2(0.4 * travel, 0)) * 0.35;
+    float gust = smoothstep(0.3, 0.7, field);
+
+    // A second, slower field turns the wind a little left or right from clump to clump.
+    float swirl = (valueNoise(p * 0.7 - float2(0.5 * travel, 0) + float2(31.7, 9.2)) - 0.5) * 0.9;
+
+    float flutter = sin(params.time * params.windFrequency * 3.1 + hash(blade, 789.123) * 2.0 * M_PI_F);
+    float sway = params.windStrength * along * along * (0.12 + 0.88 * gust + 0.1 * flutter);
+
+    float3 wind = rotate(params.windDirection, float3(0, 1, 0), swirl);
     float3 axis = normalize(cross(float3(0, 1, 0), wind));
 
     GrassVertex result;

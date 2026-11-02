@@ -2,13 +2,14 @@ import simd
 
 /// Wind that sways a grass field. You can change it at any time without rebuilding the field.
 public struct GrassWind: Sendable, Equatable {
-    /// Peak bend at the blade tip, in radians.
+    /// Bend at the blade tip inside a gust, in radians.
     public var strength: Float
-    /// Oscillation speed, in radians per second.
+    /// How lively the wind is: gust clumps travel about `frequency × gustLength / 2` meters
+    /// per second, and blades flutter faster as it rises.
     public var frequency: Float
     /// Direction the wind blows towards. Only the horizontal (XZ) part is used.
     public var direction: SIMD3<Float>
-    /// Distance in meters between gust fronts rolling across the field.
+    /// Typical size in meters of the gust clumps moving across the field.
     public var gustLength: Float
 
     public init(strength: Float = 0.3, frequency: Float = 1.5, direction: SIMD3<Float> = [1, 0, 0], gustLength: Float = 4) {
